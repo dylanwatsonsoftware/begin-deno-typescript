@@ -4,7 +4,7 @@
   "description": "Begin basic Hello World! app for Deno",
   "scripts": {
     "start": "run-s cross-env",
-    "lint": "eslint src --ignore-pattern node_modules --fix",
+    "linty": "eslint src --ignore-pattern node_modules --fix",
     "cross-env": "cross-env NODE_ENV=testing sandbox"
   },
   "devDependencies": {
