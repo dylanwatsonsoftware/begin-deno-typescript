@@ -1,0 +1,18 @@
+{
+  "batchcomplete": "",
+  "warnings": {
+    "extracts": {
+      "*": "\"exlimit\" was too large for a whole article extracts request, lowered to 1."
+    }
+  },
+  "query": {
+    "pages": {
+      "108139": {
+        "pageid": 108139,
+        "ns": 0,
+        "title": "Warwick, Western Australia",
+        "extract": "Warwick is a suburb of Perth, Western Australia within the City of Joondalup. Its postcode is 6024. The eastern third of the suburb is a native bushland area known as the Warwick Open Space.\n\n\n== History ==\nWarwick was developed in the late 1960s. The Warwick Grove Shopping Centre was built in 1974. Warwick Senior High School was founded in 1981.\n\n\n== Sport ==\nThe district is represented at Australian rules football by Warwick Greenwood Knights Junior Football Club. Basketball is played out of Warwick Stadium, which is hosted by the Warwick Senators and the Churches of Christ Sport & Recreation Association (CCSRA).\n\n\n== Transport ==\nThe Warwick train station was commissioned in 1993. The suburb is also served by Transperth bus services operated by Path Transit, Swan Transit and Transdev WA, including routes to Stirling and Whitfords train stations, Landsdale, Mirrabooka and Morley bus stations, and central Perth.\n\n\n== References =="
+      }
+    }
+  }
+}
