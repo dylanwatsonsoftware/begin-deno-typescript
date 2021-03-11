@@ -1,6 +1,6 @@
 import { _, sbd } from "../deps.ts";
 import { ApiError } from "./error.ts";
-import { WikiTextState, Section } from "../../shared/lib/speakResponse.ts";
+import { WikiTextState, Section } from "./speakResponse.ts";
 
 const getByTitle = async (locationText: string, stateName: string) => {
   console.log(`Getting wikipedia page for location: ${locationText}`);
