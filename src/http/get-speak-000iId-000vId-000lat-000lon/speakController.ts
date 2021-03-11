@@ -1,11 +1,11 @@
-import * as wikiText from "../../shared/lib/wikiText.ts";
-import { getImages, getWikipediaArticleTitle } from "../../shared/lib/wikidata.service.ts";
-import { reverseGeocode } from "../../shared/lib/mapbox.service.ts";
+import * as wikiText from "./lib/wikiText.ts";
+import { getImages, getWikipediaArticleTitle } from "./lib/wikidata.service.ts";
+import { reverseGeocode } from "./lib/mapbox.service.ts";
 
-import { Polly, S3 } from "../../shared/lib/whereami-aws.ts";
-// import metrics from "../../shared/lib/metrics.ts";
+import { Polly, S3 } from "./lib/whereami-aws.ts";
+// import metrics from "./lib/metrics.ts";
 
-import { ApiError } from "../../shared/lib/error.ts";
+import { ApiError } from "./lib/error.ts";
 import {
   GatherWikiImagesOutput,
   GatherWikiTextOutput,
@@ -15,7 +15,7 @@ import {
   StateError,
   SynthesizeSpeechInput,
   SynthesizeSpeechOutput,
-} from "../../shared/lib/speakResponse.ts";
+} from "./lib/speakResponse.ts";
 
 export const getPlace = async (input: GetPlaceInput): Promise<{ state: GetPlaceOutput } | { error: StateError }> => {
   const { latitude, longitude } = input;

@@ -10,6 +10,3 @@ data
   scopeID *String
   dataID **String
   ttl TTL
-
-@shared
-shared src/shared
