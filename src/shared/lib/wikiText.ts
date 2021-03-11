@@ -1,30 +1,17 @@
-// @ts-check
+import { sentences as _sentences } from "https://unpkg.com/sbd@1.0.18/dist/sbd.min.js";
+import { flow } from "https://deno.land/x/lodash@4.17.19/lodash.js";
+import { ApiError } from "./error.ts";
 
-/**
- * @typedef { import("../../http/get-speak-000instanceId-000voiceId-000latitude-000longitude/speakResponse").WikiTextState } WikiTextState
- * @typedef { import("../../http/get-speak-000instanceId-000voiceId-000latitude-000longitude/speakResponse").Section } Section
- */
-
-// @ts-ignore
-import { get } from "axios";
-import { sentences as _sentences } from "sbd";
-import { flow } from "lodash";
-import { ApiError } from "../../http/get-speak-000instanceId-000voiceId-000latitude-000longitude/error.ts";
-
-/**
- * @param {string} locationText
- * @param {string} stateName
- */
-const getByTitle = async (locationText, stateName) => {
+const getByTitle = async (locationText: string, stateName: string) => {
   console.log(`Getting wikipedia page for location: ${locationText}`);
-  let wikiText = await get(
+  let wikiText: any = await fetch(
     `https://en.wikipedia.org/w/api.php?action=query&prop=pageimages|extracts|info&pithumbsize=900&format=json&explaintext=true&exsectionformat=wiki&titles=${locationText}&redirects=true&inprop=url`
   );
 
   // not found - some places only have a state - lets try that
   if (wikiText.data.query.pages["-1"]) {
     console.log(`Locality not found, trying state: ${locationText}`);
-    wikiText = await get(
+    wikiText = await fetch(
       `https://en.wikipedia.org/w/api.php?action=query&prop=pageimages|extracts|info&pithumbsize=900&format=json&explaintext=true&exsectionformat=wiki&titles=${stateName}&redirects=true&inprop=url`
     );
   }
@@ -32,12 +19,9 @@ const getByTitle = async (locationText, stateName) => {
   return wikiText;
 };
 
-/**
- * @param {string} coords
- */
-const getAroundLocation = async (coords) => {
+const getAroundLocation = async (coords: string) => {
   console.log(`Getting wikipedia page for coords: ${coords}`);
-  const wikiText = await get(
+  const wikiText = await fetch(
     `https://en.wikipedia.org/w/api.php?action=query&generator=geosearch&prop=coordinates|pageimages|extracts|info&ggscoord=${coords}&format=json&exsectionformat=wiki&pithumbsize=900&redirects=true&inprop=url`
   );
 
@@ -47,9 +31,9 @@ const getAroundLocation = async (coords) => {
 /**
  * @param {string} locationText
  * @param {any} page
- * @returns {Promise<WikiTextState>}
+ * @returns {}
  */
-const transform = async (locationText, page) => {
+const transform = (locationText: string, page: any): WikiTextState => {
   console.log(`Transforming text for ${locationText}`);
   try {
     let text = page.extract;
@@ -89,8 +73,7 @@ const transform = async (locationText, page) => {
 /**
  * @param {string} transformedText
  */
-const replaceAmp = (transformedText) =>
-  transformedText.replace(/&amp;/g, "and").replace(/&/g, "and");
+const replaceAmp = (transformedText) => transformedText.replace(/&amp;/g, "and").replace(/&/g, "and");
 
 /**
  * @param {string} text
@@ -117,32 +100,24 @@ const textToSections = (text) => {
 /**
  * @param {string} transformedText
  */
-const addSpacesAfterFullStops = (transformedText) =>
-  transformedText.replace(/\.([^\s\d])/g, ". $1");
+const addSpacesAfterFullStops = (transformedText) => transformedText.replace(/\.([^\s\d])/g, ". $1");
 
 /**
  * @param {string} transformedText
  */
-const removeCarriageReturns = (transformedText) =>
-  transformedText.replace(/\n/g, " ");
+const removeCarriageReturns = (transformedText) => transformedText.replace(/\n/g, " ");
 
 /**
  * @param {string} transformedText
  */
-const removeBrackets = (transformedText) =>
-  transformedText.replace(/\([^)]*\)/g, "");
+const removeBrackets = (transformedText) => transformedText.replace(/\([^)]*\)/g, "");
 
 /**
  * @param {string} content
  * @returns {string[]} sentences
  */
 const contentToSentences = (content) =>
-  flow([
-    addSpacesAfterFullStops,
-    removeCarriageReturns,
-    removeBrackets,
-    _sentences,
-  ])(content);
+  flow([addSpacesAfterFullStops, removeCarriageReturns, removeBrackets, _sentences])(content);
 
 /**
  * @param {string} content
@@ -194,9 +169,7 @@ const transformSectionHeading = (heading) => {
  * @param {string} transformedText
  */
 const fixAbbreviations = (transformedText) =>
-  transformedText
-    .replace(/(\w\.( |$))+/g, (match) => `${match.replace(/ /g, "")} `)
-    .trim();
+  transformedText.replace(/(\w\.( |$))+/g, (match) => `${match.replace(/ /g, "")} `).trim();
 
 /**
  * @param {string} locationText
@@ -210,8 +183,7 @@ const addWelcomeTo = (locationText, sections) => [
 /**
  * @param {any[]} sections
  */
-const sectionsToText = (sections) =>
-  sections.map((section) => section.text).join(" ");
+const sectionsToText = (sections) => sections.map((section) => section.text).join(" ");
 
 /**
  * @param {Section[]} sections
@@ -244,11 +216,7 @@ const onlyUseTheFirst3000Characters = (sections) => {
   return result;
 };
 
-/**
- * @param {Section[]} sections
- * @returns {Section[]}
- */
-const maybeRemoveLastHeading = (sections) => {
+const maybeRemoveLastHeading = (sections: Section[]): Section[] => {
   const copy = [...sections];
   const last = copy.pop();
   return last.type === "heading" ? copy : sections;

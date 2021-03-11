@@ -3,7 +3,7 @@ begin-app
 
 @http
 get /
-get /speak/:instanceId/:voiceId/:latitude/:longitude
+get /speak/:iId/:voiceId/:lat/:lon
 
 @tables
 data

@@ -1,19 +1,12 @@
-// @ts-check
 
-/**
- * @typedef { SpeakResponse } SpeakResponse
- * @typedef { StateError } StateError
- */
+import * as wikiText from "../../shared/lib/wikiText.ts";
+import wikidata from "../../shared/lib/wikidata.service.ts";
+import mapbox from "../../shared/lib/mapbox.service.ts";
 
-import * as wikiText from "../../shared/lib/wikiText.js";
-import wikidata from "../../shared/lib/wikidata.service.js";
-// @ts-ignore
-import mapbox from "../../shared/lib/mapbox.service.js";
+import AWS from "../../shared/lib/whereami-aws.ts";
+import metrics from "../../shared/lib/metrics.ts";
 
-import AWS from "../../shared/lib/whereami-aws.js";
-import metrics from "../../shared/lib/metrics.js";
-
-import { ApiError } from "./error.ts";
+import { ApiError } from "../../shared/lib/error.ts";
 import {
   GatherWikiImagesOutput,
   GatherWikiTextOutput,
@@ -25,10 +18,6 @@ import {
   SynthesizeSpeechOutput,
 } from "./speakResponse.ts";
 
-/**
- * @param { GetPlaceInput } input
- * @returns {Promise<{state: GetPlaceOutput}|{ error: StateError }>}
- */
 export const getPlace = async (input: GetPlaceInput): Promise<{ state: GetPlaceOutput } | { error: StateError }> => {
   const { latitude, longitude } = input;
   console.log("Getting Place for", latitude, longitude);
@@ -139,16 +128,12 @@ export const getPage = (textFromWiki: any) => {
   return page;
 };
 
-/**
- * @param {SynthesizeSpeechInput} input
- * @returns {Promise<{state: SynthesizeSpeechOutput}|{ error: StateError }>}
- */
 async function synthesizeSpeech(
   input: SynthesizeSpeechInput
 ): Promise<{ state: SynthesizeSpeechOutput } | { error: StateError }> {
   const voiceId = input.voiceId || "Brian";
 
-  const mp3FileName = input.textFromWiki.locationText.replace(", ", "") + voiceId + ".mp3";
+  const mp3FileName = input.textFromWiki.locationText?.replace(", ", "") + voiceId + ".mp3";
 
   const urlFromS3 = await tryGetMp3FromS3(mp3FileName);
   if (urlFromS3) {
