@@ -1,6 +1,6 @@
-const AWS = require("aws-sdk");
+import { AWSS3, AWSPolly } from "../../../deps.ts";
 
-const pollyClient = new AWS.Polly({
+const pollyClient = new AWSPolly({
   signatureVersion: "v4",
   region: "us-east-1",
   logger: console,
@@ -8,26 +8,25 @@ const pollyClient = new AWS.Polly({
 });
 
 // note that this will pick up credentials from the current env vars
-const S3 = require("aws-sdk/clients/s3");
 
-const s3Client = new S3({
+const s3Client = new AWSS3({
   apiVersion: "2006-03-01",
   region: "ap-southeast-2",
   logger: console,
   httpOptions: { timeout: 30000, connectTimeout: 5000 },
 });
 
-exports.Polly = {
-  synthesizeSpeech: async (params) => {
+export const Polly = {
+  synthesizeSpeech: (params: any) => {
     return pollyClient.synthesizeSpeech(params).promise();
   },
 };
 
-exports.S3 = {
-  upload: async (params) => {
+export const S3 = {
+  upload: (params: any) => {
     return s3Client.upload(params).promise();
   },
-  tryGetUrl: async (params) => {
+  tryGetUrl: async (params: any) => {
     try {
       console.log(`Attempting to locate S3 file ${params.Key}`);
       await s3Client.headObject(params).promise();

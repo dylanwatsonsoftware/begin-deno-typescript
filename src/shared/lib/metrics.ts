@@ -1,7 +1,7 @@
-const dynamoose = require("dynamoose");
-const { v4: uuidv4 } = require("uuid");
+import * as dynamoose from "dynamoose";
+import { v4 } from "uuid";
 
-exports.writeMetrics = async (metrics) => {
+export const writeMetrics = async (metrics: any) => {
   const metricSchema = new dynamoose.Schema(
     {
       instanceId: String,
@@ -23,7 +23,7 @@ exports.writeMetrics = async (metrics) => {
 
   const Metric = dynamoose.model("youareheremetrics", metricSchema, {
     create: false,
-    suffix: "-" + process.env.ENV,
+    suffix: "-" + Deno.env.get('ENV'),
   });
 
   metrics = { id: uuidv4(), ...metrics };

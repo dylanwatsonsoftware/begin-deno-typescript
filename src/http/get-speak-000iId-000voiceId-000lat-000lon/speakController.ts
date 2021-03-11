@@ -1,10 +1,9 @@
-
 import * as wikiText from "../../shared/lib/wikiText.ts";
-import wikidata from "../../shared/lib/wikidata.service.ts";
-import mapbox from "../../shared/lib/mapbox.service.ts";
+import { getImages, getWikipediaArticleTitle } from "../../shared/lib/wikidata.service.ts";
+import { reverseGeocode } from "../../shared/lib/mapbox.service.ts";
 
-import AWS from "../../shared/lib/whereami-aws.ts";
-import metrics from "../../shared/lib/metrics.ts";
+import { Polly, S3 } from "../../shared/lib/whereami-aws.ts";
+// import metrics from "../../shared/lib/metrics.ts";
 
 import { ApiError } from "../../shared/lib/error.ts";
 import {
@@ -16,14 +15,14 @@ import {
   StateError,
   SynthesizeSpeechInput,
   SynthesizeSpeechOutput,
-} from "./speakResponse.ts";
+} from "../../shared/lib/speakResponse.ts";
 
 export const getPlace = async (input: GetPlaceInput): Promise<{ state: GetPlaceOutput } | { error: StateError }> => {
   const { latitude, longitude } = input;
   console.log("Getting Place for", latitude, longitude);
 
   try {
-    const geocoded = await mapbox.reverseGeocode({ latitude, longitude });
+    const geocoded = await reverseGeocode({ latitude, longitude });
 
     if (!geocoded) {
       return {
@@ -61,7 +60,7 @@ export const getPlace = async (input: GetPlaceInput): Promise<{ state: GetPlaceO
 const gatherWikiText = async (
   input: GetPlaceOutput
 ): Promise<{ state: GatherWikiTextOutput } | { error: StateError }> => {
-  const locationText = (await wikidata.getWikipediaArticleTitle(input.wikidata)) || input.locality + ", " + input.state;
+  const locationText = (await getWikipediaArticleTitle(input.wikidata || "")) || input.locality + ", " + input.state;
 
   const rawWikiText = await getRawWikiText(locationText, input.state, input.latitude + "|" + input.longitude);
 
@@ -87,7 +86,7 @@ const gatherWikiText = async (
 const gatherWikiImages = async (
   input: GatherWikiTextOutput
 ): Promise<{ state: GatherWikiImagesOutput } | { error: StateError }> => {
-  const images = await wikidata.getImages({
+  const images = await getImages({
     wikipediaTitle: input.textFromWiki.locationText,
     wikidataId: input.wikidata,
   });
@@ -153,7 +152,7 @@ async function synthesizeSpeech(
 
   console.log(`Generating ${voiceId} polly speech for ${input.textFromWiki.locationText}`);
 
-  const pollyResponse = await AWS.Polly.synthesizeSpeech({
+  const pollyResponse = await Polly.synthesizeSpeech({
     Engine: "neural",
     TextType: "ssml",
     Text: ssml,
@@ -172,7 +171,7 @@ async function synthesizeSpeech(
       ACL: "public-read",
     };
 
-    const s3Result = await AWS.S3.upload(s3Params);
+    const s3Result = await S3.upload(s3Params);
 
     speechUrl = s3Result.Location;
   }
@@ -191,7 +190,7 @@ async function tryGetMp3FromS3(filename: string) {
     Key: filename,
   };
 
-  return AWS.S3.tryGetUrl(params);
+  return S3.tryGetUrl(params);
 }
 
 /**
@@ -247,36 +246,36 @@ export const speak = async (speakingDetails: {
     const error = result.error;
     if (error) {
       if (error.status === 404) {
-        await metrics.writeMetrics({
-          instanceId: speakingDetails.instanceId,
-          locationRequestTime: new Date().getTime(),
-          latitude: speakingDetails.latitude,
-          longitude: speakingDetails.longitude,
-          locality: undefined,
-          stateName: undefined,
-          voice: voiceId,
-          filename: undefined,
-          cacheHit: undefined,
-          locationMiss: true,
-        });
+        // await metrics.writeMetrics({
+        //   instanceId: speakingDetails.instanceId,
+        //   locationRequestTime: new Date().getTime(),
+        //   latitude: speakingDetails.latitude,
+        //   longitude: speakingDetails.longitude,
+        //   locality: undefined,
+        //   stateName: undefined,
+        //   voice: voiceId,
+        //   filename: undefined,
+        //   cacheHit: undefined,
+        //   locationMiss: true,
+        // });
       }
 
       throw new ApiError(error.message, error.status || 500, error.err);
     }
     const state = result.state;
 
-    await metrics.writeMetrics({
-      instanceId: speakingDetails.instanceId,
-      locationRequestTime: new Date().getTime(),
-      latitude: speakingDetails.latitude,
-      longitude: speakingDetails.longitude,
-      locality: state.locality,
-      stateName: state.state,
-      voice: voiceId,
-      filename: state.filename,
-      cacheHit: state.cacheHit,
-      locationMiss: false,
-    });
+    // await metrics.writeMetrics({
+    //   instanceId: speakingDetails.instanceId,
+    //   locationRequestTime: new Date().getTime(),
+    //   latitude: speakingDetails.latitude,
+    //   longitude: speakingDetails.longitude,
+    //   locality: state.locality,
+    //   stateName: state.state,
+    //   voice: voiceId,
+    //   filename: state.filename,
+    //   cacheHit: state.cacheHit,
+    //   locationMiss: false,
+    // });
 
     return {
       locality: state.locality,

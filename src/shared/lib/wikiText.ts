@@ -1,6 +1,6 @@
-import { sentences as _sentences } from "https://unpkg.com/sbd@1.0.18/dist/sbd.min.js";
-import { flow } from "https://deno.land/x/lodash@4.17.19/lodash.js";
+import { _, sbd } from "../../deps.ts";
 import { ApiError } from "./error.ts";
+import { WikiTextState, Section } from "../../shared/lib/speakResponse.ts";
 
 const getByTitle = async (locationText: string, stateName: string) => {
   console.log(`Getting wikipedia page for location: ${locationText}`);
@@ -73,18 +73,18 @@ const transform = (locationText: string, page: any): WikiTextState => {
 /**
  * @param {string} transformedText
  */
-const replaceAmp = (transformedText) => transformedText.replace(/&amp;/g, "and").replace(/&/g, "and");
+const replaceAmp = (transformedText: string) => transformedText.replace(/&amp;/g, "and").replace(/&/g, "and");
 
 /**
  * @param {string} text
  * @returns {Section[]}
  */
-const textToSections = (text) => {
+const textToSections = (text: string): Section[] => {
   const sectionArray = text.split(/(=+\s[\w\s\-/]*\s=+)/);
   const sections = [];
 
   // overview
-  sections.push(...transformSectionContent(sectionArray.shift()));
+  sections.push(...transformSectionContent(sectionArray.shift() || ""));
 
   for (let i = 0; i < sectionArray.length; i += 2) {
     const [heading, content] = sectionArray.slice(i, i + 2);
@@ -100,43 +100,43 @@ const textToSections = (text) => {
 /**
  * @param {string} transformedText
  */
-const addSpacesAfterFullStops = (transformedText) => transformedText.replace(/\.([^\s\d])/g, ". $1");
+const addSpacesAfterFullStops = (transformedText: string) => transformedText.replace(/\.([^\s\d])/g, ". $1");
 
 /**
  * @param {string} transformedText
  */
-const removeCarriageReturns = (transformedText) => transformedText.replace(/\n/g, " ");
+const removeCarriageReturns = (transformedText: string) => transformedText.replace(/\n/g, " ");
 
 /**
  * @param {string} transformedText
  */
-const removeBrackets = (transformedText) => transformedText.replace(/\([^)]*\)/g, "");
+const removeBrackets = (transformedText: string) => transformedText.replace(/\([^)]*\)/g, "");
 
 /**
  * @param {string} content
  * @returns {string[]} sentences
  */
-const contentToSentences = (content) =>
-  flow([addSpacesAfterFullStops, removeCarriageReturns, removeBrackets, _sentences])(content);
+const contentToSentences = (content: string): string[] =>
+  _.flow([addSpacesAfterFullStops, removeCarriageReturns, removeBrackets, sbd.sentences])(content);
 
 /**
  * @param {string} content
  * @returns {Section[]}
  *
  */
-const transformSectionContent = (content) => {
+const transformSectionContent = (content: string): Section[] => {
   let sentences = contentToSentences(content);
 
   // U. S. to U.S.
   sentences = sentences.map(fixAbbreviations);
 
-  return sentences.map((text) => ({ type: "content", text }));
+  return sentences.map((text: string) => ({ type: "content", text }));
 };
 
 /**
  * @param {string} heading
  */
-const headingIsWanted = (heading) => {
+const headingIsWanted = (heading: string) => {
   const unwantedHeadings = [
     "Geography",
     "Climate",
@@ -158,7 +158,7 @@ const headingIsWanted = (heading) => {
 /**
  * @param {string} heading
  */
-const transformSectionHeading = (heading) => {
+const transformSectionHeading = (heading: string) => {
   // === heading 3 === is now heading 3.
   heading = `${heading.replace(/^=+|=+$/g, "").trim()}.`;
 
@@ -168,14 +168,14 @@ const transformSectionHeading = (heading) => {
 /**
  * @param {string} transformedText
  */
-const fixAbbreviations = (transformedText) =>
+const fixAbbreviations = (transformedText: string) =>
   transformedText.replace(/(\w\.( |$))+/g, (match) => `${match.replace(/ /g, "")} `).trim();
 
 /**
  * @param {string} locationText
  * @param {any[]} sections
  */
-const addWelcomeTo = (locationText, sections) => [
+const addWelcomeTo = (locationText: string, sections: Section[]) => [
   { type: "welcome", text: `Welcome to ${locationText}.` },
   ...sections,
 ];
@@ -183,13 +183,13 @@ const addWelcomeTo = (locationText, sections) => [
 /**
  * @param {any[]} sections
  */
-const sectionsToText = (sections) => sections.map((section) => section.text).join(" ");
+const sectionsToText = (sections: Section[]) => sections.map((section) => section.text).join(" ");
 
 /**
  * @param {Section[]} sections
  * @returns {Section[]}
  */
-const shortenContent = (sections) => {
+const shortenContent = (sections: Section[]) => {
   let contentCount = 0;
   return sections.filter((section) => {
     contentCount = section.type === "content" ? contentCount + 1 : 0;
@@ -201,7 +201,7 @@ const shortenContent = (sections) => {
  * @param {Section[]} sections
  * @returns {Section[]}
  */
-const onlyUseTheFirst3000Characters = (sections) => {
+const onlyUseTheFirst3000Characters = (sections: Section[]) => {
   const result = [];
   let textLength = -1;
 
@@ -219,7 +219,7 @@ const onlyUseTheFirst3000Characters = (sections) => {
 const maybeRemoveLastHeading = (sections: Section[]): Section[] => {
   const copy = [...sections];
   const last = copy.pop();
-  return last.type === "heading" ? copy : sections;
+  return last?.type === "heading" ? copy : sections;
 };
 
 const _getByTitle = getByTitle;

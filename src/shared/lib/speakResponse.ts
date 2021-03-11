@@ -26,10 +26,10 @@ export interface GatherWikiTextOutput extends GatherWikiTextInput {
 export type GatherWikiImagesInput = GatherWikiTextOutput;
 
 export interface GatherWikiImagesOutput extends GatherWikiImagesInput {
-  thumbnail: {
+  thumbnail?: {
     source: string;
-    width: number;
-    height: number;
+    width: string;
+    height: string;
   };
 }
 

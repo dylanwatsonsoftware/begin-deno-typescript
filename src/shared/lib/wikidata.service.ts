@@ -1,5 +1,3 @@
-const axios = require("axios");
-
 const SUPPORTED_IMAGES_TYPES = ["jpg", "jpeg", "png"];
 
 const WIKIPEDIA = "http://en.wikipedia.org";
@@ -13,17 +11,17 @@ const IMAGE_SIZE = 400;
  * @param wikidata wikidata ID
  * @returns {Promise<string | undefined>} title or undefined if the article was not found
  */
-const getWikipediaArticleTitle = async (wikidata) => {
+export const getWikipediaArticleTitle = async (wikidata: string): Promise<string | undefined> => {
   if (!wikidata) {
     return;
   }
 
   try {
-    const result = await axios.get(
+    const result = await fetch(
       `https://www.wikidata.org/w/api.php?action=wbgetentities&format=json&props=sitelinks&ids=${wikidata}&sitefilter=enwiki`
     );
 
-    const entities = result.data.entities;
+    const entities = (await result.json()).entities;
     if (!entities || !entities[wikidata]) {
       console.info(`No wikidata found for ID ${wikidata}`);
       return;
@@ -32,10 +30,7 @@ const getWikipediaArticleTitle = async (wikidata) => {
     const sitelinks = entities[wikidata].sitelinks;
     return sitelinks["enwiki"].title;
   } catch (err) {
-    console.error(
-      `Failed to get wikipedia article for wikidata ID ${wikidata}`,
-      err
-    );
+    console.error(`Failed to get wikipedia article for wikidata ID ${wikidata}`, err);
   }
 };
 
@@ -46,7 +41,13 @@ const getWikipediaArticleTitle = async (wikidata) => {
  * @param wikipediaTitle wikipedia title
  * @returns {Promise<[{width: *, source: *, height: *}] | undefined>}
  */
-const getImages = async ({ wikidataId, wikipediaTitle }) => {
+export const getImages = async ({
+  wikidataId,
+  wikipediaTitle,
+}: {
+  wikidataId?: string | undefined;
+  wikipediaTitle?: string | undefined;
+}) => {
   const images = [];
 
   if (wikidataId) {
@@ -67,25 +68,19 @@ const getImages = async ({ wikidataId, wikipediaTitle }) => {
  * @param title image title/identifier
  * @returns {Promise<{width: *, source: *, height: *} | undefined>} image source or undefined if no image was found
  */
-async function getWikiImages(wikiUrl, title) {
+export async function getWikiImages(wikiUrl: string, title: string) {
   try {
-    const result = await axios.get(
-      `${wikiUrl}/w/api.php?action=query&prop=images&format=json&titles=${title}`
-    );
+    const result = await fetch(`${wikiUrl}/w/api.php?action=query&prop=images&format=json&titles=${title}`);
 
-    const pages = result.data.query.pages;
+    const pages = (await result.json()).query.pages;
 
     const imageTitles = [];
     for (const page of Object.keys(pages)) {
-      const images = pages[page].images || [];
+      const images: { title: string }[] = pages[page].images || [];
       imageTitles.push(...images.map((image) => image.title));
     }
 
-    const urls = await Promise.all(
-      imageTitles
-        .filter(isSupportedImage)
-        .map((title) => getImageSource(wikiUrl, title))
-    );
+    const urls = await Promise.all(imageTitles.filter(isSupportedImage).map((title) => getImageSource(wikiUrl, title)));
     return urls.filter((url) => url);
   } catch (err) {
     console.warn(`Failed to get wikidata image`, err);
@@ -100,21 +95,21 @@ async function getWikiImages(wikiUrl, title) {
  * @param title image title/identifier
  * @returns {Promise<{width: *, source: *, height: *} | undefined>} image source or undefined if no image was found
  */
-async function getImageSource(wikiUrl, title) {
+async function getImageSource(wikiUrl: string, title: string) {
   try {
-    const result = await axios.get(
+    const result = await fetch(
       `${wikiUrl}/w/api.php?action=query&format=json&formatversion=2&prop=pageimages|pageterms&piprop=thumbnail&pithumbsize=${IMAGE_SIZE}&titles=${title}`
     );
 
-    const pages = result.data.query.pages;
+    const pages = (await result.json()).query.pages;
     for (const page of Object.keys(pages)) {
       const thumbnail = pages[page].thumbnail;
 
       if (thumbnail) {
         return {
-          source: thumbnail.source,
-          width: thumbnail.width,
-          height: thumbnail.height,
+          source: thumbnail.source as string,
+          width: thumbnail.width as string,
+          height: thumbnail.height as string,
         };
       }
     }
@@ -123,7 +118,7 @@ async function getImageSource(wikiUrl, title) {
   }
 }
 
-function isSupportedImage(title) {
+function isSupportedImage(title: string) {
   for (const fileType of SUPPORTED_IMAGES_TYPES) {
     if (title.endsWith(fileType)) {
       return true;
@@ -132,6 +127,3 @@ function isSupportedImage(title) {
 
   return false;
 }
-
-exports.getImages = getImages;
-exports.getWikipediaArticleTitle = getWikipediaArticleTitle;

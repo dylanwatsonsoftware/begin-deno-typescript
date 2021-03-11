@@ -5,7 +5,10 @@
   "scripts": {
     "start": "run-s cross-env",
     "linty": "eslint src --ignore-pattern node_modules --fix",
-    "cross-env": "cross-env NODE_ENV=testing sandbox"
+    "cross-env": "cross-env NODE_ENV=testing sandbox",
+    "deno:install": "deno cache --unstable src/deps.ts",
+    "deno:run":"deno run --allow-env --unstable --allow-read src/deps.ts"
+
   },
   "devDependencies": {
     "@architect/sandbox": "latest",
