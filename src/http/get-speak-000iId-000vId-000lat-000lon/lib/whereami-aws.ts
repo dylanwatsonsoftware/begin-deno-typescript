@@ -1,4 +1,4 @@
-import { AWSS3, AWSPolly } from "../../../deps.ts";
+import { AWSS3, AWSPolly } from "../deps.ts";
 
 const pollyClient = new AWSPolly({
   signatureVersion: "v4",

@@ -1,4 +1,4 @@
-import { _, sbd } from "../../deps.ts";
+import { _, sbd } from "../deps.ts";
 import { ApiError } from "./error.ts";
 import { WikiTextState, Section } from "../../shared/lib/speakResponse.ts";
 
